@@ -8,7 +8,14 @@ Misc.add_libdir if __FILE__ == $0
 module Paradigm
   extend Workflow
 
-  COMMAND = Rbbt.root.modules.Paradigm.paradigm.find
+
+  Rbbt.claim Rbbt.root.modules.Paradigm.paradigm, :proc do 
+    Misc.in_dir Rbbt.root.modules.Paradigm.find do
+      Log.debug CMD.cmd('make')
+    end
+  end
+
+  COMMAND = Rbbt.root.modules.Paradigm.paradigm.produce.find(:lib)
 
   def self.run(pathway, config, prefix)
     CMD.cmd(COMMAND,"-p" => pathway, "-c" => config, "-b" => prefix)
