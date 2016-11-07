@@ -1,11 +1,23 @@
 Paradigm=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.haml *.sass *.txt *.conf" {
+ workflow.rb
  bin=bin filter="*"{
  }
  lib=lib {
+  .keep
  }
  test=test {
   test_helper.rb
  }
  data=data filter="*"{
+ }
+ modules=modules{
+  Paradigm=Paradigm filter="*.cpp"{
+   configuration.cpp
+   evidencesource.cpp
+   externVars.cpp
+   main.cpp
+   pathwaytab.cpp
+   pathwaytab2daifg.cpp
+   }
  }
 }
