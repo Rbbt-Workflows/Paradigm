@@ -18,6 +18,6 @@ Paradigm=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.haml *.sass *
    main.cpp
    pathwaytab.cpp
    pathwaytab2daifg.cpp
-   }
+  }
  }
 }
