@@ -3,7 +3,6 @@ Paradigm=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.haml *.sass *
  bin=bin filter="*"{
  }
  lib=lib {
-  .keep
  }
  test=test {
   test_helper.rb
@@ -19,5 +18,7 @@ Paradigm=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.haml *.sass *
    pathwaytab.cpp
    pathwaytab2daifg.cpp
    }
+ }
+ examples=examples{
  }
 }
