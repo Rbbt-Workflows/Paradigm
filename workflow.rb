@@ -8,7 +8,14 @@ Misc.add_libdir if __FILE__ == $0
 module Paradigm
   extend Workflow
 
-  COMMAND = Rbbt.root.modules.Paradigm.paradigm.find
+
+  Rbbt.claim Rbbt.root.modules.Paradigm.paradigm, :proc do 
+    Misc.in_dir Rbbt.root.modules.Paradigm.find do
+      Log.debug CMD.cmd('make')
+    end
+  end
+
+  COMMAND = Rbbt.root.modules.Paradigm.paradigm.produce.find(:lib)
 
   def self.run(pathway, config, params = nil, prefix = nil)
     opts = {"-p" => pathway, "-c" => config, "-b" => prefix}
@@ -110,7 +117,6 @@ module Paradigm
 
     config << "em [max_iters=0,log_z_tol=0.01]" << "\n"
     config << "em_step [#{obs_type.collect{|type| type + '.tab=-obs>'} * ","}]" << "\n"
-
     config_file = run_dir.config
 
     config = config_override if config_override and not config_override.empty?
