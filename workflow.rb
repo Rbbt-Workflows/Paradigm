@@ -17,50 +17,67 @@ module Paradigm
 
   COMMAND = Rbbt.root.modules.Paradigm.paradigm.produce.find(:lib)
 
-  def self.run(pathway, config, params = nil, prefix = nil)
-    opts = {"-p" => pathway, "-c" => config, "-b" => prefix}
-    opts["-t"] = params if params
-    CMD.cmd(COMMAND,opts)
+  def self.run(pathway, config, prefix = nil, verbose = false)
+
+    opts = {"-p" => pathway, "-c" => config, "-b" => prefix, "--verbose" => verbose, :log => verbose }
+
+    CMD.cmd(COMMAND, opts)
   end
 
   helper :save_obs_file do |content, name, entities|
     f = file('run').obs[name].find + '.tab'
-    Open.write(f, content.to_s)
+    Misc.sensiblewrite(f, content.to_s)
 
-    TmpFile.with_file do |tmp|
-      CMD.cmd("grep -v '^#:' '#{f}' | sed 's/^#//' > #{tmp}")
-      file_entities = Open.read(tmp).split("\n").first.split("\t")[1..-1]
-      entity_pos = [1] + entities.collect{|e| file_entities.index(e)}.compact.collect{|p| p + 2}
-      CMD.cmd("cut -f #{entity_pos*","}  #{ tmp } > #{f}")
+    l = Open.read(f).split("\n").reject{|l| l =~ /^#:/ }
+    l.first.sub!(/^#/,'')
+    file_entities = l.first.split("\t")[1..-1]
+    entity_pos = [0] + entities.collect{|e| file_entities.index(e) }.compact.collect{|p| p + 1 }
+
+    samples = []
+    io = TSV.traverse l, :type => :array, :into => :stream do |line|
+      res = []
+      line.split("\t").each_with_index{|e,i| res <<  e if entity_pos.include?(i) }
+      samples << res.first
+      res * "\t"
     end
-    samples = CMD.cmd("cut -f 1 #{f}").read.split("\n")[1..-1].uniq
+    Open.write(f, io)
+
+    samples.shift
+
 
     samples
   end
 
   helper :select_obs_samples do |name, samples|
     f = file('run').obs[name].find + '.tab'
-    TmpFile.with_file do |stmp|
-      TmpFile.with_file do |ftmp|
-        Open.write(stmp, samples * "\n")
-        CMD.cmd("head -n 1 '#{f}'  > #{ftmp}")
-        CMD.cmd("grep -F -w -f '#{stmp}' '#{f}' |sort  >> #{ftmp}")
-        FileUtils.mv ftmp, f
+
+    header = true
+
+    io = TSV.traverse Open.open(f), :into => :stream, :type => :array do |line|
+      if header
+        header = false
+      else
+        sample = line.partition("\t").first
+        next unless samples.include?(sample)
       end
+
+      line
     end
+
+    Misc.sensiblewrite(f, io)
   end
 
 
-  input :pathway, :text, "Pathway definition"
+  input :pathway, :text, "Pathway definition", nil, :required => true
   input :genome, :text, "Genome observations"
   input :mRNA, :text, "Expression observations"
   input :protein, :text, "Protein abundance observations"
   input :activity, :text, "Protein activity observations"
   input :disc, :array, "Discretization breakpoints", [-1.3, 1.3]
   input :inference, :string, "Inference method", "method=BP,updates=SEQFIX,tol=1e-9,maxiter=10000,logdomain=0,verbose=1"
-  input :params, :text, "Parameter file"
-  input :config, :text, "Config file (overrides default)"
-  task :analysis => :text do |pathway, genome, mRNA, protein, activity, disc, inference, params, config_override|
+  input :max_degree, :integer, "Max degree for the graph", 5
+  input :config_paradigm, :text, "Config file for Paradigm (overrides default)"
+  task :analysis => :text do |pathway, genome, mRNA, protein, activity, disc, inference, max_degree, config_override|
 
     run_dir = file('run').find
 
@@ -74,6 +91,7 @@ module Paradigm
 
     samples = []
 
+    iif [genome, entities]
     if genome
       s = save_obs_file(genome, 'genome', entities)
       samples << s
@@ -107,13 +125,8 @@ module Paradigm
       config << "evidence [suffix=#{type}.tab,node=#{type},disc=#{disc_str},epsilon=0.01,epsilon0=0.2]" << "\n"
     end
 
-    if params
-      param_file = run_dir.params
-      Open.write(param_file, params)
-      config << "pathway [max_in_degree=5,param_file=#{param_file}]" << "\n"
-    else
-      param_file = nil
-    end
+    params_file = run_dir["params.txt"].find
+    config << "pathway [max_in_degree=#{max_degree},param_file=#{params_file}]" << "\n"
 
     config << "em [max_iters=0,log_z_tol=0.01]" << "\n"
     config << "em_step [#{obs_type.collect{|type| type + '.tab=-obs>'} * ","}]" << "\n"
@@ -123,7 +136,7 @@ module Paradigm
     Open.write(config_file, config)
 
     Misc.in_dir run_dir.find do
-      Paradigm.run(pathway_file, config_file, nil, run_dir.obs + "/")
+      Paradigm.run(pathway_file, config_file, run_dir.obs + "/", true)
     end
   end
 end
