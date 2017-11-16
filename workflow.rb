@@ -91,7 +91,6 @@ module Paradigm
 
     samples = []
 
-    iif [genome, entities]
     if genome
       s = save_obs_file(genome, 'genome', entities)
       samples << s
