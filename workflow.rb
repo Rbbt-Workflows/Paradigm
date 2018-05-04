@@ -75,7 +75,7 @@ module Paradigm
   input :activity, :text, "Protein activity observations"
   input :disc, :array, "Discretization breakpoints", [-1.3, 1.3]
   input :inference, :string, "Inference method", "method=BP,updates=SEQFIX,tol=1e-9,maxiter=10000,logdomain=0,verbose=1"
-  input :max_degree, :integer, "Max degree for the graph", 5
+  input :max_degree, :integer, "Max degree for the graph", 7
   input :config_paradigm, :text, "Config file for Paradigm (overrides default)"
   task :analysis => :text do |pathway, genome, mRNA, protein, activity, disc, inference, max_degree, config_override|
 
