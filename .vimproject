@@ -3,22 +3,26 @@ Paradigm=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.haml *.sass *
  bin=bin filter="*"{
  }
  lib=lib {
+  rbbt=rbbt{
+   tools=tools{
+    paradigm.rb
+   }
+  }
  }
  test=test {
   test_helper.rb
  }
  data=data filter="*"{
  }
- modules=modules{
-  Paradigm=Paradigm filter="*.cpp"{
-   configuration.cpp
-   evidencesource.cpp
-   externVars.cpp
-   main.cpp
-   pathwaytab.cpp
-   pathwaytab2daifg.cpp
-  }
- }
  examples=examples{
+ }
+ share=share{
+  install=install{
+   software=software{
+    libdai
+    Paradigm
+    boost
+   }
+  }
  }
 }
