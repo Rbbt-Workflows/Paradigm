@@ -15,14 +15,6 @@ module Paradigm
     end
   end
 
-  COMMAND = Rbbt.root.modules.Paradigm.paradigm.produce.find(:lib)
-
-  def self.run(pathway, config, prefix = nil, verbose = false)
-
-    opts = {"-p" => pathway, "-c" => config, "-b" => prefix, "--verbose" => verbose, :log => verbose }
-
-    CMD.cmd(COMMAND, opts)
-  end
 
   helper :save_obs_file do |content, name, entities|
     f = file('run').obs[name].find + '.tab'
