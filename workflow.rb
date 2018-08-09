@@ -3,7 +3,7 @@ require 'rbbt/workflow'
 
 Misc.add_libdir if __FILE__ == $0
 
-require 'rbbt/tools/Paradigm'
+require 'rbbt/tools/paradigm'
 
 module Paradigm
   extend Workflow
