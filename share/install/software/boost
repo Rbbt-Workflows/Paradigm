@@ -1,0 +1,16 @@
+#!/bin/bash
+
+name='boost'
+url="http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.gz/download"
+
+install_src "$name" "$url"
+
+pkg_dir="`opt_dir \"$name\"`"
+
+cd $pkg_dir
+./bootstrap.sh
+./b2
+
+add2file "$OPT_DIR/.ld-paths" "$pkg_dir"
+add2file "$OPT_DIR/.pkgconfig-paths" "$pkg_dir/stage/lib"
+add2file "$OPT_DIR/.c-paths" "$pkg_dir"
