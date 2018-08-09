@@ -1,0 +1,8 @@
+#!/bin/bash
+
+name='libdai'
+url="https://bitbucket.org/jorism/libdai.git"
+
+get_git "$name" "$url"
+ln -s "$OPT_BUILD_DIR/$name/Makefile.LINUX" "$OPT_BUILD_DIR/$name/Makefile.conf"
+build "$name" "$extra"

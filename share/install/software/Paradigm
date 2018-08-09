@@ -1,0 +1,6 @@
+#!/bin/bash
+
+name='Paradigm'
+url="https://github.com/aduong/Paradigm.git"
+
+install_git "$name" "$url"
