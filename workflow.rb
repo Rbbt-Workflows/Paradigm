@@ -102,9 +102,9 @@ module Paradigm
     end
 
     if activity
-      s = save_obs_file(activity, 'activity', entities)
+      s = save_obs_file(activity, 'active', entities)
       samples << s
-      obs_type << "activity"
+      obs_type << "active"
     end
 
     num_obs = obs_type.length
