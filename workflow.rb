@@ -71,6 +71,8 @@ module Paradigm
   input :config_paradigm, :text, "Config file for Paradigm (overrides default)"
   task :analysis => :text do |pathway, genome, mRNA, protein, activity, disc, inference, max_degree, config_override|
 
+    raise ParameterException, "Paradigm does not accept spaces in job names" if clean_name.include? " "
+
     run_dir = file('run').find
 
     pathway_file = run_dir.pathway
