@@ -17,6 +17,7 @@ module Paradigm
 
 
   helper :save_obs_file do |content, name, entities|
+    content = Open.read(content) if Misc.is_filename?(content) and File.exists?(content)
     f = file('run').obs[name].find + '.tab'
     Misc.sensiblewrite(f, content.to_s)
 
@@ -59,17 +60,53 @@ module Paradigm
     Misc.sensiblewrite(f, io)
   end
 
+  helper :obs_discretization do |name|
+    f = file('run').obs[name].find + '.tab'
+
+    header = true
+
+    min = 0
+    max = 0
+    max_num_values = 0
+    io = TSV.traverse Open.open(f), :type => :array do |line|
+      if header
+        header = false
+      else
+        values = line.split("\t")[1..-1].reject{|v| v.nil? || v.empty?}.compact.collect{|v| v.to_f}.uniq
+        max_num_values = values.length if values.length > max_num_values
+        next if values.empty?
+        min = values.min if values.min < min
+        max = values.max if values.max > max
+      end
+    end
+
+    case
+    when (min >= 0 and max <= 1)
+      [0.5]
+    when (min >= -1 and max <= 1 and max_num_values == 2)
+      [0]
+    when (min >= -1 and max <= 1)
+      [-0.3, 0.3]
+    when (min >= -1 and max <= 1)
+      [-0.3, 0.3]
+    when (min >= -2 and max <= 2)
+      [-1.3, 0, 1.3]
+    else
+      [min / 2, 0, max / 2]
+    end
+  end
+
 
   input :pathway, :text, "Pathway definition", nil, :required => true
   input :genome, :text, "Genome observations"
   input :mRNA, :text, "Expression observations"
   input :protein, :text, "Protein abundance observations"
   input :activity, :text, "Protein activity observations"
-  input :disc, :array, "Discretization breakpoints", [-1.3, 1.3]
+  input :disc, :array, "Discretization breakpoints for all samples (default auto)"
   input :inference, :string, "Inference method", "method=BP,updates=SEQFIX,tol=1e-9,maxiter=10000,logdomain=0,verbose=1"
   input :max_degree, :integer, "Max degree for the graph", 7
   input :config_paradigm, :text, "Config file for Paradigm (overrides default)"
-  task :analysis => :text do |pathway, genome, mRNA, protein, activity, disc, inference, max_degree, config_override|
+  task :analysis => :text do |pathway, genome, mRNA, protein, activity, gdisc, inference, max_degree, config_override|
 
     raise ParameterException, "Paradigm does not accept spaces in job names" if clean_name.include? " "
 
@@ -112,9 +149,10 @@ module Paradigm
     num_obs = obs_type.length
     good_samples = Misc.counts(samples.flatten).select{|s,c| c == num_obs}.keys
 
-    disc_str = disc.collect{|d| d.to_s } * ";"
     obs_type.each do |type|
       select_obs_samples(type, good_samples)
+      disc = gdisc || obs_discretization(type) 
+      disc_str = disc.collect{|d| d.to_s } * ";"
       config << "evidence [suffix=#{type}.tab,node=#{type},disc=#{disc_str},epsilon=0.01,epsilon0=0.2]" << "\n"
     end
 
@@ -131,6 +169,25 @@ module Paradigm
     Misc.in_dir run_dir.find do
       Paradigm.run(pathway_file, config_file, run_dir.obs + "/", true)
     end
+  end
+
+  dep :analysis
+  task :analysis_tsv => :tsv do
+    tsv = TSV.setup({}, "Node~#:type=:list#:cast=:to_f")
+    current_tsv = nil
+    TSV.traverse step(:analysis), :type => :line do |line|
+      if line =~/^> (.*) loglikelihood/
+        tsv = tsv.attach current_tsv, :complete => true if current_tsv
+        current_tsv = TSV.setup({}, "Node~#{$1}#type=:list#cast=:to_i")
+        next
+      end
+      gene, value = line.split("\t")
+      current_tsv[gene] = [value]
+    end
+
+    tsv = tsv.attach current_tsv, :complete => true if current_tsv
+
+    tsv
   end
 end
 
