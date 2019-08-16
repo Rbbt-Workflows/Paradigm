@@ -1,6 +1,7 @@
 Paradigm=/$PWD filter="*.rb *.rake Rakefile *.rdoc *.R *.sh *.js *.haml *.sass *.txt *.conf" {
  workflow.rb
  bin=bin filter="*"{
+  generate_st_pathway.rb
  }
  lib=lib {
   rbbt=rbbt{

@@ -67,6 +67,8 @@ module Paradigm
 
     min = 0
     max = 0
+    rmin = 0
+    rmax = 0
     max_num_values = 0
     io = TSV.traverse Open.open(f), :type => :array do |line|
       if header
@@ -75,8 +77,14 @@ module Paradigm
         values = line.split("\t")[1..-1].reject{|v| v.nil? || v.empty?}.compact.collect{|v| v.to_f}.uniq
         max_num_values = values.length if values.length > max_num_values
         next if values.empty?
-        min = values.min if values.min < min
-        max = values.max if values.max > max
+        vrmin = values.sort[2]
+        vrmax = values.sort[-3]
+        vmin = values.min
+        vmax = values.max
+        min = vmin if vmin < min
+        max = vmax if vmax > max
+        rmin = vrmin if vrmin && vrmin < rmin
+        rmax = vrmax if vrmax && vrmax > rmax
       end
     end
 
@@ -90,10 +98,10 @@ module Paradigm
     when (min >= -1 and max <= 1)
       [-0.3, 0.3]
     when (min >= -2 and max <= 2)
-      [-1.3, 0, 1.3]
+      [-1.3, 1.3]
     else
-      [min / 2, 0, max / 2]
-    end
+      [rmin.to_f / 2, rmax.to_f / 2]
+    end.uniq
   end
 
 
